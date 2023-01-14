@@ -7,13 +7,22 @@ require 'Hole'
 require 'Player'
 require 'Energies'
 require 'Badies'
+require 'Walls'
+require 'Particles'
 
 love.window.setTitle("Marbles")
 
 gameWidth, gameHeight = 400, 240
 screenWidth, screenHeight = 1200, 720
 
-
+pal = {
+  white = {0.929, 0.925, 0.847},
+  orange = {0.922, 0.451, 0.157},
+  green = {0.216,0.239,0.024},
+  pink = {0.580,0.106,0.357},
+  purple = {0.333, 0.255, 0.373},
+  blue = {0.024,0.016,0.122}
+}
 
 function love.load()
   world = bf.newWorld(0, 0, false)
@@ -27,20 +36,27 @@ function love.load()
     resizable = true,
     pixelperfect = true
   })
-  push:setBorderColor{0.12, 0.11, 0.14} --default value
+  --push:setBorderColor{0.12, 0.11, 0.14} --default value
+  push:setBorderColor{pal.blue}
 
   --ground = bf.Collider.new(world, "Polygon",
   --        {0, 178, 0, 170 , 180, 170, 180, 178})
   --ground:setType("static")
+  curHealth = 0
   wallThicknes = 2
-  ground = bf.Collider.new(world, "Rectangle", gameWidth/2, gameHeight-wallThicknes, gameWidth, wallThicknes)
-  wall_left = bf.Collider.new(world, "Rectangle", wallThicknes, gameHeight/2, wallThicknes, gameHeight)
-  wall_right = bf.Collider.new(world, "Rectangle", gameWidth-wallThicknes, gameHeight/2, wallThicknes, gameHeight)
-  ceiling = bf.Collider.new(world, "Rectangle", gameWidth/2, wallThicknes, gameWidth, wallThicknes)
-  ground:setType('static')
-  wall_left:setType('static')
-  wall_right:setType('static')
-  ceiling:setType('static')
+  table.insert(walls, walls.new(gameWidth/2, gameHeight+wallThicknes, gameWidth + wallThicknes*2, wallThicknes))
+  table.insert(walls, walls.new(gameWidth/2, -wallThicknes, gameWidth + wallThicknes * 2, wallThicknes))
+  table.insert(walls, walls.new(-wallThicknes, gameHeight/2, wallThicknes, gameHeight))
+  table.insert(walls, walls.new(gameWidth+wallThicknes, gameHeight/2, wallThicknes, gameHeight))
+  
+  --ground = bf.Collider.new(world, "Rectangle", gameWidth/2, gameHeight-wallThicknes, gameWidth, wallThicknes)
+  --wall_left = bf.Collider.new(world, "Rectangle", wallThicknes, gameHeight/2, wallThicknes, gameHeight)
+  --wall_right = bf.Collider.new(world, "Rectangle", gameWidth-wallThicknes, gameHeight/2, wallThicknes, gameHeight)
+  --ceiling = bf.Collider.new(world, "Rectangle", gameWidth/2, wallThicknes, gameWidth, wallThicknes)
+  --ground:setType('static')
+  --wall_left:setType('static')
+  --wall_right:setType('static')
+  --ceiling:setType('static')
   --hole = bf.Collider.new(world, "Circle", gameWidth/2, gameHeight/2, 5)
   --hole:setType('static')
   destroy_queue = {}
@@ -76,21 +92,35 @@ function love.load()
   --  local temp = Bady.new(love.math.random(9, gameWidth-9), 9)
   --  table.insert(badies, temp)
   --end
+  hole = hole.new( gameWidth/2, gameHeight/2)
 
+  bgrange = love.graphics.newImage("art/range.png")
+  bgrange:setWrap("repeat", "repeat")
+  bgrangequad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgrange:getWidth(), bgrange:getHeight())  
+  
 
-  hole = Hole.new( gameWidth/2, gameHeight/2)
-  bgplayer = love.graphics.newImage("art/greenS.jpg")
-  bgbady = love.graphics.newImage("art/red.jpg")
-  bgfood = love.graphics.newImage("art/grass.jpg")
+  bghole = love.graphics.newImage("art/hole.png")
+  bghole:setWrap("repeat", "repeat")
+  bgholequad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bghole:getWidth(), bghole:getHeight())  
+  
+  bgplayer = love.graphics.newImage("art/player.png")
+  bgplayer:setWrap("repeat", "repeat")
+  bgplayerquad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgplayer:getWidth(), bgplayer:getHeight())  
+  
+  bgbady = love.graphics.newImage("art/enemy.png")
+  bgbady:setWrap("repeat", "repeat")
+  bgbadyquad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgbady:getWidth(), bgbady:getHeight())
+  
+  bgfood = love.graphics.newImage("art/food.png")
   bgfood:setWrap("repeat", "repeat")
   bgfoodquad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgfood:getWidth(), bgfood:getHeight())
 end
 
 function randomPos(rad)
   local out = {}
-  local boxOffset = wallThicknes + rad
-  out.x = love.math.random(boxOffset, gameWidth-boxOffset)
-  out.y = love.math.random(boxOffset, gameHeight-boxOffset)
+  --local boxOffset =  rad
+  out.x = love.math.random(rad, gameWidth-rad)
+  out.y = love.math.random(rad, gameHeight-rad)
   return out
 end
 
@@ -110,6 +140,7 @@ end
 
 function love.update(dt)
   world:update(dt)
+  hole.update(dt)
   timer = timer - dt
   if waves < 0 then 
     waves = wavesM
@@ -169,7 +200,12 @@ function love.update(dt)
     if bady.isDead() == true then
       print("dead")
       table.remove(badies, i)
+      local x = bady.getX()
+      local y = bady.getY()
       bady.destroy()
+      local rad = 3
+      --local pos = randomPos(rad)
+      table.insert(energies, energies.new(x, y, rad))
     else
       bady.update(dt)
     end
@@ -182,8 +218,8 @@ function love.update(dt)
       table.remove(energies, i)
       energy.destroy()
       --table.insert(energies, energies.new())
-    --else
-    --  energy.update(dt)
+    else
+      energy.update(dt)
     end
   end
   --if spawnTimer > 1 then
@@ -202,49 +238,86 @@ function love.update(dt)
 end
 
 local function playerStencil()
-  love.graphics.circle("fill", player.getX() / gameWidth * screenWidth, 
-    player.getY() / gameHeight * screenHeight, 
-    player.getRadius() / gameWidth * screenWidth)
+  love.graphics.setColor(1,1,1)
+  love.graphics.circle("fill", 
+    player.getX(),-- / gameWidth * screenWidth, 
+    player.getY(),-- / gameHeight * screenHeight, 
+    player.getRadius())--R / gameWidth * screenWidth)
   --love.graphics.circle("fill", ball.getX(), ball.getY(), ball.getRadius())
 end
 local function badyStencil()
+  love.graphics.setColor(1,1,1)
   for i, v in ipairs(badies) do
     love.graphics.circle("fill", 
-      v.getX() / gameWidth * screenWidth, 
-      v.getY() / gameHeight * screenHeight,
-      v.getRadius() / gameWidth * screenWidth)
+      v.getX(),-- / gameWidth * screenWidth, 
+      v.getY(),-- / gameHeight * screenHeight,
+      v.getRadius())-- / gameWidth * screenWidth)
   end
 end
 local function foodStencil()
+  love.graphics.setColor(1,1,1)
   for i, v in ipairs(energies) do
-    love.graphics.circle("fill", v.getX() / gameWidth * screenWidth, v.getY()/ gameHeight * screenHeight, v.getRadius()/ gameHeight * screenHeight)
+    love.graphics.circle("fill", 
+      v.getX(),-- / gameWidth * screenWidth, 
+      v.getY(), --/ gameHeight * screenHeight, 
+      v.getRadius()) --/ gameHeight * screenHeight)
   end
+end
+local function holeStencil()
+  love.graphics.setColor(1,1,1)
+  love.graphics.circle("fill", hole.getX(), hole.getY(), hole.getRadius())
+end
+local function rangeStencil()
+  love.graphics.setColor(1,1,1)
+  love.graphics.circle("fill", hole.getX(), hole.getY(), player.getRange())
 end
 
 function love.draw()
+  --push:start()
+  --love.graphics.setBackgroundColor(1,1,1)
+  --love.graphics.setColor(0.4, 0.3, 0.02)
+  --love.graphics.rectangle("line", 0,0,gameWidth,gameHeight)
+  --push:finish()
   
   --love.graphics.setStencilTest("greater", 0)
-  love.graphics.setStencilTest("greater", 0)
-  love.graphics.stencil(foodStencil, "replace", 1)
-  love.graphics.draw(bgfood, bgfoodquad, 0, 0)
-  love.graphics.stencil(playerStencil, "replace", 1)
-  love.graphics.setStencilTest("greater", 0)
-  love.graphics.draw(bgplayer)
-  love.graphics.stencil(badyStencil, "replace", 1)
-  love.graphics.setStencilTest("greater", 0)
-  love.graphics.draw(bgbady)
-  love.graphics.setStencilTest()
 
-  push:apply("start")
-  
-  
+  push:start()
   
   world:draw()
+  love.graphics.setStencilTest("greater", 0)
+  love.graphics.stencil(rangeStencil, "replace", 1)
+  love.graphics.draw(bgrange, bgrangequad, 0, 0)
+
+  love.graphics.setStencilTest()
+  player.drawEffects()
+  
+  --love.graphics.setStencilTest()
+  love.graphics.setStencilTest("greater", 0)
+  love.graphics.stencil(holeStencil, "replace", 1)
+  love.graphics.draw(bghole, bgholequad, 0, 0)
+
+  --love.graphics.setStencilTest("greater", 0)
+  love.graphics.stencil(playerStencil, "replace", 1)
+  love.graphics.draw(bgplayer, bgplayerquad, 0, 0)
+
+  --love.graphics.setStencilTest("greater", 0)
+  love.graphics.stencil(foodStencil, "replace", 1)
+  love.graphics.draw(bgfood, bgfoodquad, 0, 0)
+
+  --love.graphics.setStencilTest("greater", 0)
+  love.graphics.stencil(badyStencil, "replace", 1)
+  love.graphics.draw(bgbady, bgbadyquad, 0, 0)
+  love.graphics.setStencilTest()
+  
+  love.graphics.setColor(unpack(pal.white)) 
+  love.graphics.print(player.getRange(), gameWidth / 2, gameHeight / 20)
+  
+  
   --love.graphics.setColor(0.04, 0.3, 0.02)
   --love.graphics.ellipse("fill", gameWidth/2, gameHeight/2, gameHeight/32, gameHeight/32, 8)
   --love.graphics.rectangle("line", 0,0,gameWidth,gameHeight)
   
-  push:apply("end")
+  push:finish()
   
 end
 

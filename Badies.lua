@@ -7,15 +7,17 @@ function badies.new(x, y)
   local r = 4
   local timerM = math.random(15, 40) / 10
   --local timerV = math.random(0, timerM * 5) / 10
-  local timer = timerM
+  local timer = -1
   local pow = math.random(700,2100)
   local damp = math.random(5,20)/100
+  local effects = {}
 
   local physics = bf.Collider.new(world, 'Circle', x, y, r)
   physics.identity = 'bady'
-  local dx = hole:getX() - x
-  local dy = hole:getY() - y
-  --physics:applyLinearImpulse(dx * pow, dy * pow)
+  --local a = getAngle(physics.getX(), physics.getY(), hole.getX(), hole.getY())
+  --local xbounce = math.cos(a) * pow / 60
+  --local ybounce = math.sin(a) * pow / 60
+  --physics:applyForce(xbounce,ybounce)
   physics:setLinearDamping(damp)
   setmetatable(self, physics)
 
@@ -51,6 +53,18 @@ function badies.new(x, y)
   --end
 
   function self.update(dt)
+    table.insert(effects, particles.new(
+        physics.getX(),physics.getY(),physics.getRadius()-2,
+        'orange',2.5,true))
+    for e=#effects,1,-1 do
+      local effect = effects[e]
+      if effect.isDead() == true then
+        table.remove(effects, e)
+      else
+        effect.update(dt)
+      end
+    end
+
     timer = timer - dt
     if timer < 0 then
       timer = timerM
@@ -64,23 +78,27 @@ function badies.new(x, y)
   end
 
   function physics:postSolve(other)
-    if other == wall_left or other == wall_right or 
-      other == ground or other == ceiling then
+    if other.identity == "wall" then
       print("hit")
       dead = true
     end
   end
 
   function physics:draw(alpha)
-    push:apply("end")
-    local xa = physics.getX() / gameWidth * screenWidth
-    local ya = physics.getY() / gameHeight * screenHeight
-    local ra = r / gameHeight * screenHeight
-    love.graphics.setColor(.4, 0, 0.05)
-    love.graphics.circle('line', xa, ya, ra)
-    --local s = math.floor(timerM*10)/10 .. ", " .. pow .. ", " .. damp
-    --love.graphics.print(s, x,y)
-    push:apply("start")
+    for i, e in ipairs(effects) do
+      e.draw()
+    end
+    push:finish()
+    
+    push:start()
+    --local xa = physics.getX() / gameWidth * screenWidth
+    --local ya = physics.getY() / gameHeight * screenHeight
+    --local ra = r / gameHeight * screenHeight
+    --love.graphics.setColor(.4, 0, 0.05)
+    --love.graphics.circle('line', xa, ya, ra)
+    ----local s = math.floor(timerM*10)/10 .. ", " .. pow .. ", " .. damp
+    ----love.graphics.print(s, x,y)
+    --push:start()
   --  love.graphics.setColor(.4, 0, 0.05)
   --  love.graphics.circle('line', self:getX(), self:getY(), self:getRadius())
   end
