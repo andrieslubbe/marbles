@@ -5,20 +5,20 @@ function energies.new(x, y, r)
   self.__index = self
   local dead = false
   local moveCenter = false
-  local sense = 5
-  local senseScale = math.random(6,14)/10
+  local sense = 3
+  local senseScale = math.random(4,14)/10
   local da = nil
   local timerM = math.random(25,75)/100
   local timer = timerM
-  local rewalkM = math.random(2,8)
+  local rewalkM = math.random(2,6)
   local rewalk = rewalkM
   local closest = nil
-  local speed = 30
+  local speed = 25
   local mode = {r=0, g=0, b = 0}
   local xdir,ydir = nil
-  local effects = {}
-  local etimerM = 1/4
-  local etimer = etimerM
+  --local effects = {}
+  --local etimerM = 2
+  --local etimer = etimerM
 
   local physics = bf.Collider.new(world, 'Circle', x, y, r)
   --local buffer = bf.Collider.new(world, 'Circle', x, y, r*2)
@@ -44,21 +44,21 @@ function energies.new(x, y, r)
   end
 
   function self.update(dt)
-    etimer = etimer - dt
-    if etimer < 0 then
-      etimer = etimerM
-      table.insert(effects, particles.new(
-        physics.getX(),physics.getY(),physics.getRadius()*.8,
-        'green',8))
-    end
-    for e=#effects,1,-1 do
-      local effect = effects[e]
-      if effect.isDead() == true then
-        table.remove(effects, e)
-      else
-        effect.update(dt)
-      end
-    end
+    --etimer = etimer - dt
+    --if etimer < 0 then
+    --  etimer = etimerM
+    --  table.insert(effects, particles.new(
+    --    physics.getX(),physics.getY(),physics.getRadius()*.8,
+    --    'green',8,0,0,0))
+    --end
+    --for e=#effects,1,-1 do
+    --  local effect = effects[e]
+    --  if effect.isDead() == true then
+    --    table.remove(effects, e)
+    --  else
+    --    effect.update(dt)
+    --  end
+    --end
 
 
     local x = physics.getX()
@@ -66,12 +66,12 @@ function energies.new(x, y, r)
     timer = timer - dt
     if timer < 0 then
       timer = timerM
-      moveCenter = false
+      --moveCenter = false
 
       da = distAngle(x, y, hole.getX(), hole.getY())
       --print(da.dist)
       --sense = 180 / (da.dist ^ 0.8) + physics.getRadius()
-      sense =  senseScale * .05 * (da.dist ^ 1.2) + physics.getRadius() *2
+      sense =  senseScale * .4 * (da.dist) + physics.getRadius() *2
       --local  closest = nil
       closest = nil
       local colls = world:queryCircleArea(x, y, sense)
@@ -82,17 +82,17 @@ function energies.new(x, y, r)
             closest = a
           end
         
-        
-        elseif collider.identity == 'wall' then
-          moveCenter = true
         end
+        --elseif collider.identity == 'wall' then
+        --  moveCenter = true
+        --end
       end
     end
     
     local da = distAngle(physics.getX(), physics.getY(), hole.getX(), hole.getY()) 
   --if moveCenter then
-    xdir = 0.1 * math.cos(da.angle) * speed * dt
-    ydir = 0.1 * math.sin(da.angle) * speed * dt
+    xdir = 0.5 * math.cos(da.angle) * speed * dt
+    ydir = 0.5 * math.sin(da.angle) * speed * dt
 
     rewalk = rewalk - dt
     if rewalk < 0 then
@@ -131,30 +131,20 @@ function energies.new(x, y, r)
     --  moveCenter = true
     end
   end
-
+  
   function physics:draw(alpha)
-    for i, e in ipairs(effects) do
-      e.draw()
-    end
-    push:finish()
-    local x, y = push:toReal(physics.getX(), physics.getY())
-    --love.graphics.setColor(mode.r, mode.g, mode.b)
-    --love.graphics.circle('line', x, y, sense)
-    --local x2, y2 = push:toGame(physics.getX()+xdir*100,physics.getY()+ydir*100)
-    --if x2 ~= nil and y2 ~= nil then
-    --  
-    --  love.graphics.line(x,y,x2,y2)
-    --end
-    --local ya = physics.getY() / gameHeight * screenHeight
-    --local out = ""
-    if closest ~= nil then
-      --out = "A"
-      --love.graphics.line(physics.getX(), physics.getY(), hole.getX(), hole.getY())
-      --love.graphics.print(closest.dist, x, y)
-    end
-    --love.graphics.print(out, physics.getX(), physics.getY())
-    push:start()
+
   end
+
+  --function self.drawEffects()
+  --  for i, e in ipairs(effects) do
+  --    e.draw()
+  --  end
+  --  --push:finish()
+  --  --local x, y = push:toReal(physics.getX(), physics.getY())
+  --  --love.graphics.circle('line', x, y, sense)
+  --  --push:start()
+  --end
 
   return self
 end

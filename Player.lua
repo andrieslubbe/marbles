@@ -40,7 +40,7 @@ function player.new(x, y, r)
     --  etimer = etimerM
       table.insert(effects, particles.new(
         physics.getX(),physics.getY(),physics.getRadius()-1,
-        'green', 1, true))
+        'purple', 1, 1, 0,0))
     --end
     for e=#effects,1,-1 do
       local effect = effects[e]
@@ -54,54 +54,63 @@ function player.new(x, y, r)
     curHealth = 0
     da = distAngle(physics.getX(), physics.getY(), hole.getX(), hole.getY())
     local moveAngles = {}
-    if da.dist < chain then
-      if love.keyboard.isDown("w") then
-        --physics:applyForce(0, -speed*dt)
-        table.insert(moveAngles, math.pi * 1.5)
-        if love.keyboard.isDown("s") then
-          table.insert(moveAngles,math.pi*2)
-        end
-      elseif love.keyboard.isDown("s") then
-        --physics:applyForce(speed*dt, 0)
-        table.insert(moveAngles,0)
-      end
-      if love.keyboard.isDown("r") then
-        --physics:applyForce(0, speed*dt)
-        table.insert(moveAngles,math.pi / 2)
-      end
-      if love.keyboard.isDown("a") then
-        --physics:applyForce(-speed*dt, 0)
-        table.insert(moveAngles, math.pi)
-      end
-      
-      if #moveAngles > 0 then
-        local sum = 0
-        for _,v in pairs(moveAngles) do -- Get the sum of all numbers in t
-          sum = sum + v
-        end
-        local moveAngle = sum / #moveAngles
-        --moveAngle = moveAngle % (2 * math.pi)
-        local xbounce = math.cos(moveAngle) * speed * dt
-        local ybounce = math.sin(moveAngle) * speed * dt
-        physics:applyForce(xbounce,ybounce)
-      end
 
+    --local joysticks = love.joystick.getJoysticks()
+    
+
+    if da.dist < chain then
+      if #joysticks > 0 then
+        joystick = joysticks[1]
+        local xaxis = joystick:getGamepadAxis("leftx") * speed * dt
+        local yaxis = joystick:getGamepadAxis("lefty") * speed * dt
+        --print(xaxis, yaxis)
+        physics:applyForce(xaxis, yaxis)
+      else
+        if love.keyboard.isDown("w") then
+          table.insert(moveAngles, math.pi * 1.5)
+          if love.keyboard.isDown("s") then
+            table.insert(moveAngles,math.pi*2)
+          end
+        elseif love.keyboard.isDown("s") then
+          table.insert(moveAngles,0)
+        end
+        if love.keyboard.isDown("r") then
+          table.insert(moveAngles,math.pi / 2)
+        end
+        if love.keyboard.isDown("a") then
+          table.insert(moveAngles, math.pi)
+        end
+        
+        if #moveAngles > 0 then
+          local sum = 0
+          for _,v in pairs(moveAngles) do -- Get the sum of all numbers in t
+            sum = sum + v
+          end
+          local moveAngle = sum / #moveAngles
+          --moveAngle = moveAngle % (2 * math.pi)
+          local xbounce = math.cos(moveAngle) * speed * dt
+          local ybounce = math.sin(moveAngle) * speed * dt
+          physics:applyForce(xbounce,ybounce)
+        end
+      end
     else 
       local xbounce = math.cos(da.angle) * speed * dt
       local ybounce = math.sin(da.angle) * speed * dt
       physics:applyForce(xbounce,ybounce)
     end
-    
   end
 
   function physics:postSolve(other)
     if other.identity == 'energy' then
       --print("collect")
-      chain = chain + 3
+      chain = chain + 1
     end
   end
 
   function physics:draw(alpha)
+    --push:finish()
+    --love.graphics.font(physics.get,0,20)
+    --push:start()
     --love.graphics.setColor(unpack(pal.purple))
     --love.graphics.arc('line', 'open', hole.getX(), hole.getY(), chain, 
     --  11.5/6 * math.pi, 9.5 / 6 * math.pi)

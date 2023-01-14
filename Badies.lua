@@ -7,10 +7,13 @@ function badies.new(x, y)
   local r = 4
   local timerM = math.random(15, 40) / 10
   --local timerV = math.random(0, timerM * 5) / 10
-  local timer = -1
+  local timer = timerM
   local pow = math.random(700,2100)
   local damp = math.random(5,20)/100
   local effects = {}
+  --local etimerM = 1/15
+  --local etimer = etimerM
+  local hit = false
 
   local physics = bf.Collider.new(world, 'Circle', x, y, r)
   physics.identity = 'bady'
@@ -37,6 +40,9 @@ function badies.new(x, y)
   function self.destroy()
     physics:destroy()
   end
+  function self.kill()
+    dead = true
+  end
 
   --function moveTowards(x1, y1, x2, y2)
   --  local t = distAngle(x1, y1, x2, y2)
@@ -53,9 +59,21 @@ function badies.new(x, y)
   --end
 
   function self.update(dt)
+    --etimer = etimer - dt
+    --if etimer < 0 then
+      --etimer = etimerM
+    if hit then
+      hit = false
+      for i=1,8 do
+        table.insert(effects, particles.new(
+          physics.getX(),physics.getY(),2,
+          'orange',1.2,1.2,(.5-math.random())*20 +10,(.5-math.random())*20+10))
+      end
+    end
     table.insert(effects, particles.new(
         physics.getX(),physics.getY(),physics.getRadius()-2,
-        'orange',2.5,true))
+        'orange',2.2,1,0,0))
+        
     for e=#effects,1,-1 do
       local effect = effects[e]
       if effect.isDead() == true then
@@ -81,16 +99,16 @@ function badies.new(x, y)
     if other.identity == "wall" then
       print("hit")
       dead = true
+    elseif other.identity == "player" or
+      other.identity == 'wall' or
+      other.identity == 'bady' then
+        hit = true
     end
   end
 
   function physics:draw(alpha)
-    for i, e in ipairs(effects) do
-      e.draw()
-    end
-    push:finish()
     
-    push:start()
+    --push:finish()
     --local xa = physics.getX() / gameWidth * screenWidth
     --local ya = physics.getY() / gameHeight * screenHeight
     --local ra = r / gameHeight * screenHeight
@@ -101,6 +119,12 @@ function badies.new(x, y)
     --push:start()
   --  love.graphics.setColor(.4, 0, 0.05)
   --  love.graphics.circle('line', self:getX(), self:getY(), self:getRadius())
+  end
+
+  function self.drawEffects()
+    for i, e in ipairs(effects) do
+      e.draw()
+    end
   end
 
   return self

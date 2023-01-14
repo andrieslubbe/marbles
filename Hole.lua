@@ -36,17 +36,17 @@ function hole.new(x, y)
   end
 
 
-  function physics:draw(alpha)
-    local f = 'line'
-    if inv then
-      --f = 'fill'
-      --love.graphics.setColor(0.922, 0.451, 0.157) --orange
-      love.graphics.setColor(0.216, 0.239, 0.024) --green
-    else
-      love.graphics.setColor(0.929, 0.925, 0.847) --white
-    end
-    love.graphics.circle(f, self:getX(), self:getY(), self:getRadius(), 8)
-    
+  function self.draw()
+  --  local f = 'line'
+  --  if inv then
+  --    --f = 'fill'
+  --    --love.graphics.setColor(0.922, 0.451, 0.157) --orange
+  --    love.graphics.setColor(unpack(pal.green))
+  --  else
+      love.graphics.setColor(unpack(pal.white)) --white
+  --  end
+    love.graphics.circle('fill', self:getX(), self:getY(), self:getRadius(), 16)
+  --  
   end
 
   function physics:postSolve(other)

@@ -1,6 +1,6 @@
 particles = {}
 
-function particles.new(x,y,r,col,timer,shrink)
+function particles.new(x,y,r,col,timer,grow,deltax,deltay)
   local self = {}
   self.__index = self
 
@@ -16,13 +16,19 @@ function particles.new(x,y,r,col,timer,shrink)
   end
 
   function self.update(dt)
+    if deltax>0 then
+      x = x + dt * deltax
+    end
+    if deltay>0 then
+      y = y + dt* deltay
+    end
     timer = timer - dt
     if timer < 0 then
       dead = true
     end
-    if shrink then 
-     r = r - deltar * dt
-    end
+     
+    r = r - grow * deltar * dt
+    
   end
 
   function self.draw()

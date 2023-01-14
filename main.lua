@@ -25,6 +25,7 @@ pal = {
 }
 
 function love.load()
+  pause = true
   world = bf.newWorld(0, 0, false)
   --world:addCollisionClass('Ghost', {ignores = {'Solid'}})
   love.graphics.setDefaultFilter('nearest', 'nearest')
@@ -79,7 +80,7 @@ function love.load()
   --end
 
   
-  for i = 1, 35 do
+  for i = 1, 50 do
     local rad = 3
     local pos = randomPos(rad)
     table.insert(energies, energies.new(pos.x, pos.y, rad))
@@ -94,10 +95,16 @@ function love.load()
   --end
   hole = hole.new( gameWidth/2, gameHeight/2)
 
+
+  font = love.graphics.newFont(28) 
+  bgback = love.graphics.newImage("art/background.png")
+  bgback:setWrap("repeat", "repeat")
+  bgbackquad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgback:getWidth(), bgback:getHeight())
+
+
   bgrange = love.graphics.newImage("art/range.png")
   bgrange:setWrap("repeat", "repeat")
-  bgrangequad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgrange:getWidth(), bgrange:getHeight())  
-  
+  bgrangequad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgrange:getWidth(), bgrange:getHeight())
 
   bghole = love.graphics.newImage("art/hole.png")
   bghole:setWrap("repeat", "repeat")
@@ -138,7 +145,32 @@ end
 --  end
 --end
 
+function love.gamepadpressed(joystick, button)
+  if button == 'start' then
+      --print("pause")
+      pause = not pause
+  elseif button =='x' then
+    for i=#badies,1,-1 do
+      local bady = badies[i]
+      
+      bady.kill()
+    end
+  end
+end
+
 function love.update(dt)
+  joysticks = love.joystick.getJoysticks()
+  --if #joysticks > 0 then
+  --  joystick = joysticks[1]
+  --  if joystick:isGamepadDown("start") then
+  --    print("pause")
+  --    cooldown = .2
+  --    pause = not pause
+  --  end
+  --end
+  if pause then
+    return
+  end
   world:update(dt)
   hole.update(dt)
   timer = timer - dt
@@ -200,12 +232,12 @@ function love.update(dt)
     if bady.isDead() == true then
       print("dead")
       table.remove(badies, i)
-      local x = bady.getX()
-      local y = bady.getY()
+      local bx = bady.getX()
+      local by = bady.getY()
       bady.destroy()
       local rad = 3
       --local pos = randomPos(rad)
-      table.insert(energies, energies.new(x, y, rad))
+      table.insert(energies, energies.new(bx, by, rad))
     else
       bady.update(dt)
     end
@@ -273,6 +305,7 @@ local function rangeStencil()
 end
 
 function love.draw()
+  love.graphics.setFont(font)
   --push:start()
   --love.graphics.setBackgroundColor(1,1,1)
   --love.graphics.setColor(0.4, 0.3, 0.02)
@@ -280,23 +313,33 @@ function love.draw()
   --push:finish()
   
   --love.graphics.setStencilTest("greater", 0)
-
+  --push:start()
+  --push:finish()
+  
   push:start()
   
   world:draw()
+  --love.graphics.draw(bgback, bgbackquad, 0, 0)
+
   love.graphics.setStencilTest("greater", 0)
   love.graphics.stencil(rangeStencil, "replace", 1)
   love.graphics.draw(bgrange, bgrangequad, 0, 0)
 
   love.graphics.setStencilTest()
   player.drawEffects()
+  for i,b in ipairs(badies) do
+    b.drawEffects()
+  end
+  --for i, f in ipairs(energies) do
+  --  f.drawEffects()
+  --end
   
   --love.graphics.setStencilTest()
-  love.graphics.setStencilTest("greater", 0)
-  love.graphics.stencil(holeStencil, "replace", 1)
-  love.graphics.draw(bghole, bgholequad, 0, 0)
-
   --love.graphics.setStencilTest("greater", 0)
+  --love.graphics.stencil(holeStencil, "replace", 1)
+  --love.graphics.draw(bghole, bgholequad, 0, 0)
+
+  love.graphics.setStencilTest("greater", 0)
   love.graphics.stencil(playerStencil, "replace", 1)
   love.graphics.draw(bgplayer, bgplayerquad, 0, 0)
 
@@ -309,16 +352,31 @@ function love.draw()
   love.graphics.draw(bgbady, bgbadyquad, 0, 0)
   love.graphics.setStencilTest()
   
-  love.graphics.setColor(unpack(pal.white)) 
-  love.graphics.print(player.getRange(), gameWidth / 2, gameHeight / 20)
-  
   
   --love.graphics.setColor(0.04, 0.3, 0.02)
   --love.graphics.ellipse("fill", gameWidth/2, gameHeight/2, gameHeight/32, gameHeight/32, 8)
   --love.graphics.rectangle("line", 0,0,gameWidth,gameHeight)
-  
+  hole.draw()
+
   push:finish()
+  love.graphics.setColor(unpack(pal.white)) 
+  love.graphics.printf(player.getRange(), 0, screenHeight / 20, screenWidth, 'center')
   
+  --love.graphics.printf(#badies, 0, screenHeight / 20, screenWidth, 'left')
+  if pause then
+    --push:start()
+    --love.graphics.draw(bgrange, bgbadyquad, 0, 0)
+    --push:finish()
+    love.graphics.setColor(unpack(pal.blue))
+    love.graphics.rectangle("fill",screenWidth/2-100,screenHeight/3-10,200,50)
+    love.graphics.setColor(unpack(pal.purple))
+    love.graphics.rectangle("line",screenWidth/2-100,screenHeight/3-10,200,50)
+    love.graphics.setColor(unpack(pal.white))
+    love.graphics.printf("PAUSED", 0, screenHeight/3 , screenWidth, 'center')
+    --push:finish()
+    --return
+  end
+  love.graphics.print(love.timer.getFPS(),0,0)
 end
 
 
