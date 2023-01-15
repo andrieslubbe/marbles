@@ -10,7 +10,7 @@ function badies.new(x, y)
   local timer = timerM
   local pow = math.random(700,2100)
   local damp = math.random(5,20)/100
-  local effects = {}
+  --local effects = {}
   --local etimerM = 1/15
   --local etimer = etimerM
   local hit = false
@@ -64,25 +64,24 @@ function badies.new(x, y)
       --etimer = etimerM
     if hit then
       hit = false
-      for i=1,8 do
-        table.insert(effects, particles.new(
+      for i=1,4 do
+        table.insert(particles, particles.new(
           physics.getX(),physics.getY(),2,
-          'orange',1.2,1.2,(.5-math.random())*20 +10,(.5-math.random())*20+10))
+          'yellow',.8,1.2,math.random()*2*math.pi,math.random(7,14)))
       end
     end
-    table.insert(effects, particles.new(
+    table.insert(particles, particles.new(
         physics.getX(),physics.getY(),physics.getRadius()-2,
         'orange',2.2,1,0,0))
         
-    for e=#effects,1,-1 do
-      local effect = effects[e]
-      if effect.isDead() == true then
-        table.remove(effects, e)
-      else
-        effect.update(dt)
-      end
-    end
-
+    --for e=#effects,1,-1 do
+    --  local effect = effects[e]
+    --  if effect.isDead() == true then
+    --    table.remove(effects, e)
+    --  else
+    --    effect.update(dt)
+    --  end
+    --end
     timer = timer - dt
     if timer < 0 then
       timer = timerM
@@ -97,11 +96,9 @@ function badies.new(x, y)
 
   function physics:postSolve(other)
     if other.identity == "wall" then
-      print("hit")
+      --print("hit")
       dead = true
-    elseif other.identity == "player" or
-      other.identity == 'wall' or
-      other.identity == 'bady' then
+    elseif other.identity == "player" then
         hit = true
     end
   end
@@ -121,11 +118,11 @@ function badies.new(x, y)
   --  love.graphics.circle('line', self:getX(), self:getY(), self:getRadius())
   end
 
-  function self.drawEffects()
-    for i, e in ipairs(effects) do
-      e.draw()
-    end
-  end
+  --function self.drawEffects()
+  --  for i, e in ipairs(effects) do
+  --    e.draw()
+  --  end
+  --end
 
   return self
 end

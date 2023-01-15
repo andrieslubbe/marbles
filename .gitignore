@@ -1,1 +1,6 @@
-/art
+love.exe
+\dist*
+package.cmd
+packager.yml
+Ball.lua
+icon.png

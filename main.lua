@@ -17,12 +17,17 @@ screenWidth, screenHeight = 1200, 720
 
 pal = {
   white = {0.929, 0.925, 0.847},
+  yellow = {0.918, 0.620, 0.102},
   orange = {0.922, 0.451, 0.157},
-  green = {0.216,0.239,0.024},
-  pink = {0.580,0.106,0.357},
   purple = {0.333, 0.255, 0.373},
-  blue = {0.024,0.016,0.122}
+  pink = {0.580, 0.106, 0.357},
+  green = {0.216, 0.239, 0.024},
+  blue = {0.051, 0.118, 0.129},
+  black = {0.024, 0.016, 0.122}
 }
+--local font = love.graphics.newImageFont("art/font.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+local font = love.graphics.newFont(28)
+local fontS = love.graphics.newFont(20) 
 
 function love.load()
   pause = true
@@ -38,7 +43,7 @@ function love.load()
     pixelperfect = true
   })
   --push:setBorderColor{0.12, 0.11, 0.14} --default value
-  push:setBorderColor{pal.blue}
+  push:setBorderColor{pal.black}
 
   --ground = bf.Collider.new(world, "Polygon",
   --        {0, 178, 0, 170 , 180, 170, 180, 178})
@@ -80,7 +85,7 @@ function love.load()
   --end
 
   
-  for i = 1, 50 do
+  for i = 1, 32 do
     local rad = 3
     local pos = randomPos(rad)
     table.insert(energies, energies.new(pos.x, pos.y, rad))
@@ -95,8 +100,7 @@ function love.load()
   --end
   hole = hole.new( gameWidth/2, gameHeight/2)
 
-
-  font = love.graphics.newFont(28) 
+  --font = love.graphics.newFont(28) 
   bgback = love.graphics.newImage("art/background.png")
   bgback:setWrap("repeat", "repeat")
   bgbackquad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgback:getWidth(), bgback:getHeight())
@@ -149,12 +153,18 @@ function love.gamepadpressed(joystick, button)
   if button == 'start' then
       --print("pause")
       pause = not pause
-  elseif button =='x' then
-    for i=#badies,1,-1 do
-      local bady = badies[i]
-      
-      bady.kill()
-    end
+  --elseif button =='x' then
+  --  for i=#badies,1,-1 do
+  --    local bady = badies[i]
+  --    
+  --    bady.kill()
+  --  end
+  end
+end
+
+function love.keypressed(key, scancode, isrepeat)
+  if key == "space" then
+    pause = not pause
   end
 end
 
@@ -167,6 +177,9 @@ function love.update(dt)
   --    cooldown = .2
   --    pause = not pause
   --  end
+  --end
+  --if love.keypressed.isDown("space") then
+  --  pause = not pause
   --end
   if pause then
     return
@@ -230,7 +243,12 @@ function love.update(dt)
     local bady = badies[i]
     
     if bady.isDead() == true then
-      print("dead")
+      for i=1,12 do
+        table.insert(particles, particles.new(
+          bady.getX(),bady.getY(), 1,
+          'orange',math.random(6,8)/10,-math.random(6,8)/10,math.random()*2*math.pi,math.random(12,20)))
+      end
+      --print("dead")
       table.remove(badies, i)
       local bx = bady.getX()
       local by = bady.getY()
@@ -246,7 +264,7 @@ function love.update(dt)
     local energy = energies[i]
     
     if energy.isDead() == true then
-      print("collected")
+      --print("collected")
       table.remove(energies, i)
       energy.destroy()
       --table.insert(energies, energies.new())
@@ -266,6 +284,14 @@ function love.update(dt)
   --  world:DestroyBody(b)
   --  destroy_queue[b] = nil
   --end
+  for p=#particles,1,-1 do
+    local particle = particles[p]
+    if particle.isDead() == true then
+      table.remove(particles, p)
+    else
+      particle.update(dt)
+    end
+  end
 
 end
 
@@ -326,10 +352,10 @@ function love.draw()
   love.graphics.draw(bgrange, bgrangequad, 0, 0)
 
   love.graphics.setStencilTest()
-  player.drawEffects()
-  for i,b in ipairs(badies) do
-    b.drawEffects()
-  end
+  --player.drawEffects()
+  --for i,b in ipairs(badies) do
+  --  b.drawEffects()
+  --end
   --for i, f in ipairs(energies) do
   --  f.drawEffects()
   --end
@@ -338,6 +364,10 @@ function love.draw()
   --love.graphics.setStencilTest("greater", 0)
   --love.graphics.stencil(holeStencil, "replace", 1)
   --love.graphics.draw(bghole, bgholequad, 0, 0)
+
+  for i, e in ipairs(particles) do
+    e.draw()
+  end
 
   love.graphics.setStencilTest("greater", 0)
   love.graphics.stencil(playerStencil, "replace", 1)
@@ -364,15 +394,10 @@ function love.draw()
   
   --love.graphics.printf(#badies, 0, screenHeight / 20, screenWidth, 'left')
   if pause then
+    drawMenu()
     --push:start()
     --love.graphics.draw(bgrange, bgbadyquad, 0, 0)
     --push:finish()
-    love.graphics.setColor(unpack(pal.blue))
-    love.graphics.rectangle("fill",screenWidth/2-100,screenHeight/3-10,200,50)
-    love.graphics.setColor(unpack(pal.purple))
-    love.graphics.rectangle("line",screenWidth/2-100,screenHeight/3-10,200,50)
-    love.graphics.setColor(unpack(pal.white))
-    love.graphics.printf("PAUSED", 0, screenHeight/3 , screenWidth, 'center')
     --push:finish()
     --return
   end
@@ -393,4 +418,24 @@ function distAngle(x1, y1, x2, y2)
   out.dist = distanceBetween(x1, y1, x2, y2)
   out.angle = getAngle(x1, y1, x2, y2)
   return out
+end
+
+
+function drawMenu()
+  love.graphics.setColor(.2,.2,.2,.3)
+  love.graphics.rectangle("fill",0,0,screenWidth,screenHeight)
+  love.graphics.setColor(unpack(pal.black))
+  love.graphics.rectangle("fill",screenWidth/2-100,screenHeight/4-10,200,50)
+  love.graphics.rectangle("fill",screenWidth/2-150,screenHeight/7*5-10,300,140)
+  love.graphics.setColor(unpack(pal.purple))
+  love.graphics.rectangle("line",screenWidth/2-100,screenHeight/4-10,200,50)
+  love.graphics.rectangle("line",screenWidth/2-150,screenHeight/7*5-10,300,140)
+  love.graphics.setColor(unpack(pal.white))
+  --love.graphics.print("PAUSED", screenWidth/2, screenHeight/3)
+  love.graphics.printf("PAUSED", 0, screenHeight/4 , screenWidth, 'center')
+  --love.graphics.printf("SELECT")
+  love.graphics.setFont(fontS)
+  --love.graphics.printf("Press start", 0, screenHeight/4 + 60, screenWidth, 'center')
+  love.graphics.printf("Move using left joystick\r\nDefend home\r\nCollect food\r\n...\r\nPress start", 0, screenHeight/7*5 , screenWidth, 'center')
+
 end

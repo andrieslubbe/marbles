@@ -38,18 +38,18 @@ function player.new(x, y, r)
     --etimer = etimer - dt
     --if etimer < 0 then
     --  etimer = etimerM
-      table.insert(effects, particles.new(
+      table.insert(particles, particles.new(
         physics.getX(),physics.getY(),physics.getRadius()-1,
         'purple', 1, 1, 0,0))
     --end
-    for e=#effects,1,-1 do
-      local effect = effects[e]
-      if effect.isDead() == true then
-        table.remove(effects, e)
-      else
-        effect.update(dt)
-      end
-    end
+    --for e=#effects,1,-1 do
+    --  local effect = effects[e]
+    --  if effect.isDead() == true then
+    --    table.remove(effects, e)
+    --  else
+    --    effect.update(dt)
+    --  end
+    --end
     chain = chain + curHealth
     curHealth = 0
     da = distAngle(physics.getX(), physics.getY(), hole.getX(), hole.getY())
@@ -135,12 +135,12 @@ function player.new(x, y, r)
     --love.graphics.circle('fill', self:getX(), self:getY(), self:getRadius())
   end
 
-  function self.drawEffects()
-    for i, e in ipairs(effects) do
-      e.draw()
-    end
-    
-  end
+  --function self.drawEffects()
+  --  for i, e in ipairs(effects) do
+  --    e.draw()
+  --  end
+  --  
+  --end
 
   return self
 end

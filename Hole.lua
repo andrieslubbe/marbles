@@ -38,13 +38,13 @@ function hole.new(x, y)
 
   function self.draw()
   --  local f = 'line'
-  --  if inv then
+    if inv then
   --    --f = 'fill'
   --    --love.graphics.setColor(0.922, 0.451, 0.157) --orange
-  --    love.graphics.setColor(unpack(pal.green))
-  --  else
-      love.graphics.setColor(unpack(pal.white)) --white
-  --  end
+      love.graphics.setColor(unpack(pal.purple))
+    else
+      love.graphics.setColor(unpack(pal.white))
+    end
     love.graphics.circle('fill', self:getX(), self:getY(), self:getRadius(), 16)
   --  
   end

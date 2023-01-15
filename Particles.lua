@@ -1,13 +1,14 @@
 particles = {}
 
-function particles.new(x,y,r,col,timer,grow,deltax,deltay)
+function particles.new(x,y,r,col,timer,grow,dir,speed)
   local self = {}
   self.__index = self
 
   --local timerM = lifetime
   --local timer = timerM
-  local x,y,r,timer = x,y,r,timer
+  local x,y,r,timer,speed = x,y,r,timer,speed
   local deltar = r/timer
+  local deltas = speed/timer
   local dead = false
   local col = pal[col]
 
@@ -16,12 +17,12 @@ function particles.new(x,y,r,col,timer,grow,deltax,deltay)
   end
 
   function self.update(dt)
-    if deltax>0 then
-      x = x + dt * deltax
+    if speed > 0 then
+      speed = speed - deltar * dt
+      x = x + math.cos(dir) * speed * dt
+      y = y +  math.sin(dir) * speed * dt
     end
-    if deltay>0 then
-      y = y + dt* deltay
-    end
+    
     timer = timer - dt
     if timer < 0 then
       dead = true
