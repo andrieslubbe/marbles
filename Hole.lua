@@ -22,11 +22,16 @@ function hole.new(x, y)
   function self.getRadius()
     return 5
   end
+  function self.setInv(b)
+    inv = b
+  end
+
+
   function self.update(dt)
     if hit then
       inv = true
       hit = false
-      curHealth = -1
+      curHealth = curHealth -1
     end
     cooldown = cooldown - dt
     if cooldown < 0 then

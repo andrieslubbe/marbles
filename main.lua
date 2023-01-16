@@ -17,12 +17,13 @@ screenWidth, screenHeight = 1200, 720
 
 pal = {
   white = {0.929, 0.925, 0.847},
-  yellow = {0.918, 0.620, 0.102},
+  --yellow = {0.918, 0.620, 0.102},
+  blue = {0.424, 0.792, 0.878},
   orange = {0.922, 0.451, 0.157},
   purple = {0.333, 0.255, 0.373},
-  pink = {0.580, 0.106, 0.357},
-  green = {0.216, 0.239, 0.024},
-  blue = {0.051, 0.118, 0.129},
+  --pink = {0.580, 0.106, 0.357},
+  --green = {0.216, 0.239, 0.024},
+  --blue = {0.051, 0.118, 0.129},
   black = {0.024, 0.016, 0.122}
 }
 --local font = love.graphics.newImageFont("art/font.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
@@ -65,16 +66,26 @@ function love.load()
   --ceiling:setType('static')
   --hole = bf.Collider.new(world, "Circle", gameWidth/2, gameHeight/2, 5)
   --hole:setType('static')
-  destroy_queue = {}
+  --destroy_queue = {}
   local boxSize = 4
   local boxOffset = wallThicknes + boxSize
+
+  
   --food = {}
-  --
+  level = 1
+  rangeOffset = -10
+  levelThresh = 100
+  maxScore = 0
+  bonusHealth = 0
+  grow = 0
+  growtimerM = 1/30
+  growtimer = growtimerM
+
   timerM = 3
   timer = timerM
-  wavesM = 5
+  wavesM = 3
   waves = wavesM
-  spawnMult = 1
+  spawnMult = 2
   --for i = 1, 2 do
   --  local temp = bf.Collider.new(world, "Rectangle",love.math.random(boxOffset, gameWidth-boxOffset), 
   --    love.math.random(boxOffset, gameHeight-boxOffset), boxSize, boxSize)
@@ -85,13 +96,14 @@ function love.load()
   --end
 
   
-  for i = 1, 32 do
+  for i = 1, 40 do
     local rad = 3
     local pos = randomPos(rad)
     table.insert(energies, energies.new(pos.x, pos.y, rad))
   end
   --ball = Ball.new( 325/5, 325/5)
-  player = player.new(gameWidth / 2 - 15, gameHeight / 2, 4)
+  startHealth = 30
+  player = player.new(gameWidth / 2 - 15, gameHeight / 2, 4, startHealth)
   
   
   --for i = 1, 4 do
@@ -106,7 +118,7 @@ function love.load()
   bgbackquad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgback:getWidth(), bgback:getHeight())
 
 
-  bgrange = love.graphics.newImage("art/range.png")
+  bgrange = love.graphics.newImage("art/range1.png")
   bgrange:setWrap("repeat", "repeat")
   bgrangequad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgrange:getWidth(), bgrange:getHeight())
 
@@ -153,7 +165,9 @@ function love.gamepadpressed(joystick, button)
   if button == 'start' then
       --print("pause")
       pause = not pause
-  --elseif button =='x' then
+  elseif button =='x' then
+    curHealth= 5
+    --player.pulse()
   --  for i=#badies,1,-1 do
   --    local bady = badies[i]
   --    
@@ -168,7 +182,62 @@ function love.keypressed(key, scancode, isrepeat)
   end
 end
 
+function growUpdate(dt)
+  growtimer = growtimer - dt
+  
+    if growtimer < 0 then
+      local chain = player.getRange()
+      growtimer = growtimerM
+      if grow ~= 0 then
+        curHealth = curHealth + grow
+      end
+      if grow == 0 and chain >= levelThresh then
+        if level == 15 then
+          victory()
+        end
+        for i=#badies,1,-1 do
+          badies[i].kill()
+        end
+        growtimerM = 1/30
+        grow = 2
+      end
+      if chain >= 224 then
+        growtimerM = 1/12
+        grow = -1
+      end
+      if grow < 0  and chain <= startHealth + bonusHealth then
+        curHealth = startHealth + bonusHealth - chain 
+        bonusHealth = 0
+        --if #badies > 0 then
+        --  badies[1].kill()
+        --end
+        --grow = grow -
+        --chain = 30
+        grow = 0
+        level = level + 1
+        
+        bgrange = love.graphics.newImage("art/range" .. level .. ".png")
+        bgrange:setWrap("repeat", "repeat")
+        bgrangequad = love.graphics.newQuad(0, 0, screenWidth, screenHeight, bgrange:getWidth(), bgrange:getHeight())      
+      end
+    end
+end
+
+function victory()
+  for i=#badies,1,-1 do
+    table.remove(badies, i)
+  end
+  for i=#energies,1,-1 do
+    table.remove(energies, i)
+  end
+  pause = true
+end
+
 function love.update(dt)
+  score = (level - 1) * levelThresh + player.getRange() + rangeOffset
+  if score > maxScore then
+    maxScore = score
+  end
   joysticks = love.joystick.getJoysticks()
   --if #joysticks > 0 then
   --  joystick = joysticks[1]
@@ -186,10 +255,13 @@ function love.update(dt)
   end
   world:update(dt)
   hole.update(dt)
+
+  growUpdate(dt)
+
   timer = timer - dt
   if waves < 0 then 
-    waves = wavesM
-    spawnMult = math.random(6,20)/10
+    waves = wavesM + level
+    spawnMult = math.random(18-level,24-level/2)/10
   end
   if timer < 0 then
     waves = waves - 1
@@ -246,7 +318,7 @@ function love.update(dt)
       for i=1,12 do
         table.insert(particles, particles.new(
           bady.getX(),bady.getY(), 1,
-          'orange',math.random(6,8)/10,-math.random(6,8)/10,math.random()*2*math.pi,math.random(12,20)))
+          'orange',math.random(6,8)/10,-math.random(6,8)/10,math.random()*2*math.pi,math.random(14,22)))
       end
       --print("dead")
       table.remove(badies, i)
@@ -387,11 +459,29 @@ function love.draw()
   --love.graphics.ellipse("fill", gameWidth/2, gameHeight/2, gameHeight/32, gameHeight/32, 8)
   --love.graphics.rectangle("line", 0,0,gameWidth,gameHeight)
   hole.draw()
+  player.draw()
 
   push:finish()
   love.graphics.setColor(unpack(pal.white)) 
-  love.graphics.printf(player.getRange(), 0, screenHeight / 20, screenWidth, 'center')
+  local scoreD = player.getRange() + rangeOffset
+  if grow ~= 0 then
+    scoreD = scoreD .. ' + ' .. bonusHealth
+  end
+  love.graphics.printf(scoreD, 0, screenHeight / 20, screenWidth, 'center')
+  local lvls = ''
+  for i=1,level do
+    lvls = lvls .. '•'
+  end
+  love.graphics.printf(lvls, 0, screenHeight/20 + 24, screenWidth,'center')
+
+  love.graphics.setFont(fontS)
+  local debugT = 'Waves: '.. waves .. 
+    '\r\nMult: ' .. spawnMult
+  love.graphics.print(debugT, 10, 50)
   
+  love.graphics.print(love.timer.getFPS(),10,0)
+
+
   --love.graphics.printf(#badies, 0, screenHeight / 20, screenWidth, 'left')
   if pause then
     drawMenu()
@@ -401,7 +491,8 @@ function love.draw()
     --push:finish()
     --return
   end
-  love.graphics.print(love.timer.getFPS(),0,0)
+
+  
 end
 
 
@@ -420,21 +511,34 @@ function distAngle(x1, y1, x2, y2)
   return out
 end
 
+function drawOutlineRec(y,width,height)
+  love.graphics.setColor(unpack(pal.black))
+  love.graphics.rectangle("fill",screenWidth/2-width/2,y-13,width,height)
+  love.graphics.setColor(unpack(pal.purple))
+  love.graphics.rectangle("line",screenWidth/2-width/2,y-13,width,height)
+end
+
 
 function drawMenu()
-  love.graphics.setColor(.2,.2,.2,.3)
+  love.graphics.setColor(.2,.2,.2,.2)
   love.graphics.rectangle("fill",0,0,screenWidth,screenHeight)
   love.graphics.setColor(unpack(pal.black))
-  love.graphics.rectangle("fill",screenWidth/2-100,screenHeight/4-10,200,50)
-  love.graphics.rectangle("fill",screenWidth/2-150,screenHeight/7*5-10,300,140)
-  love.graphics.setColor(unpack(pal.purple))
-  love.graphics.rectangle("line",screenWidth/2-100,screenHeight/4-10,200,50)
-  love.graphics.rectangle("line",screenWidth/2-150,screenHeight/7*5-10,300,140)
+  drawOutlineRec(screenHeight/4+41,160,48)
+  drawOutlineRec(screenHeight/4,200,48)
+  
+  drawOutlineRec(screenHeight/7*5,300,142)
+  --love.graphics.rectangle("fill",screenWidth/2-80,screenHeight/4+44,160,40)
+  --love.graphics.rectangle("fill",screenWidth/2-150,screenHeight/7*5-10,300,140)
+  --love.graphics.setColor(unpack(pal.purple))
+  --love.graphics.rectangle("line",screenWidth/2-100,screenHeight/4-10,200,50)
+  --love.graphics.rectangle("line",screenWidth/2-80,screenHeight/4+44,160,40)
+  --love.graphics.rectangle("line",screenWidth/2-150,screenHeight/7*5-10,300,140)
   love.graphics.setColor(unpack(pal.white))
   --love.graphics.print("PAUSED", screenWidth/2, screenHeight/3)
   love.graphics.printf("PAUSED", 0, screenHeight/4 , screenWidth, 'center')
   --love.graphics.printf("SELECT")
   love.graphics.setFont(fontS)
+  love.graphics.printf('Score: ' .. maxScore, 0, screenHeight/4+41, screenWidth, 'center')
   --love.graphics.printf("Press start", 0, screenHeight/4 + 60, screenWidth, 'center')
   love.graphics.printf("Move using left joystick\r\nDefend home\r\nCollect food\r\n...\r\nPress start", 0, screenHeight/7*5 , screenWidth, 'center')
 

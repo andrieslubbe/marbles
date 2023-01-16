@@ -67,7 +67,7 @@ function badies.new(x, y)
       for i=1,4 do
         table.insert(particles, particles.new(
           physics.getX(),physics.getY(),2,
-          'yellow',.8,1.2,math.random()*2*math.pi,math.random(7,14)))
+          'orange',.8,1.2,math.random()*2*math.pi,math.random(7,14)))
       end
     end
     table.insert(particles, particles.new(

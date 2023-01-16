@@ -2,7 +2,7 @@ https://github.com/simplifylabs/love-packager
 
 1. Install NodeJS
 2. Run `npx love-packager init` to initialise the directory
-3. Run `npx love-packager package all` to package to project
+3. Run `npx love-packager package` to package to project
 
 
 

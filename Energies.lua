@@ -126,6 +126,11 @@ function energies.new(x, y, r)
   function physics:postSolve(other)
     if other.identity == 'player' then
       --print("collect")
+      if grow == 0 then
+        curHealth = curHealth + 1
+      else 
+        bonusHealth = bonusHealth + 1
+      end
       dead = true
     --elseif other.identity == 'wall' then
     --  moveCenter = true

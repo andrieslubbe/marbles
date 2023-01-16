@@ -1,16 +1,21 @@
 player = {}
 
-function player.new(x, y, r)
+function player.new(x, y, r, health)
   local self = {}
   self.__index = self
   --local dead = false
-  local chain = 30
+  local chain = health
   local speed = 1080
   local damp = 1.5
   --local curdist = nil
   --local curangle = nil
   local da = nil
-  local effects = {}
+  --local effects = {}
+  --local grow = 0
+  --local timerM = 1/20
+  --local timer = timerM
+  
+  --local pulseO,pulseM,pulse,pulseV = false,4,0,30
   --local etimerM = 1/30
   --local etimer = etimerM
 
@@ -32,8 +37,14 @@ function player.new(x, y, r)
   function self.getRange()
     return chain
   end
+  function self.pulse()
+    if not pulseO then
+      pulseO = true
+  end
+  end
 
   function self.update(dt)
+    
     --local mult = 18
     --etimer = etimer - dt
     --if etimer < 0 then
@@ -101,26 +112,27 @@ function player.new(x, y, r)
   end
 
   function physics:postSolve(other)
-    if other.identity == 'energy' then
-      --print("collect")
-      chain = chain + 1
-    end
+    --if other.identity == 'energy' then
+    --  --print("collect")
+    --  chain = chain + 1
+    --end
   end
 
-  function physics:draw(alpha)
+  function self.draw()
     --push:finish()
     --love.graphics.font(physics.get,0,20)
     --push:start()
-    --love.graphics.setColor(unpack(pal.purple))
-    --love.graphics.arc('line', 'open', hole.getX(), hole.getY(), chain, 
+    --if pulseO then
+    --love.graphics.setColor(unpack(pal.blue))
+    --love.graphics.arc('line', 'open', physics.getX(), physics.getY(), pulseV, 
     --  11.5/6 * math.pi, 9.5 / 6 * math.pi)
-    --love.graphics.arc('line', 'open', hole.getX(), hole.getY(), chain, 
+    --love.graphics.arc('line', 'open', physics.getX(), physics.getY(), pulseV, 
     --  8.5/6 * math.pi, 6.5 / 6 * math.pi)
-    --love.graphics.arc('line', 'open', hole.getX(), hole.getY(), chain, 
+    --love.graphics.arc('line', 'open', physics.getX(), physics.getY(), pulseV, 
     --  5.5/6 * math.pi, 3.5 / 6 * math.pi)
-    --love.graphics.arc('line', 'open', hole.getX(), hole.getY(), chain, 
+    --love.graphics.arc('line', 'open', physics.getX(), physics.getY(), pulseV, 
     --  2.5/6 * math.pi, .5 / 6 * math.pi)
-
+    --end
     
 
     
