@@ -49,9 +49,13 @@ function player.new(x, y, r, health)
     --etimer = etimer - dt
     --if etimer < 0 then
     --  etimer = etimerM
+    local col = 'purple'
+    if level > 8  then
+      col = 'white'
+    end
       table.insert(particles, particles.new(
         physics.getX(),physics.getY(),physics.getRadius()-1,
-        'purple', 1, 1, 0,0))
+        col, 1, 1, 0,0))
     --end
     --for e=#effects,1,-1 do
     --  local effect = effects[e]
@@ -105,7 +109,7 @@ function player.new(x, y, r, health)
         end
       end
     else 
-      local xbounce = math.cos(da.angle) * speed * dt
+      local xbounce = math.cos(da.angle) * speed* dt
       local ybounce = math.sin(da.angle) * speed * dt
       physics:applyForce(xbounce,ybounce)
     end

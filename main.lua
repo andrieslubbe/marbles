@@ -2,13 +2,14 @@
 push = require "libs/push/push"
 bf = require("libs/breezefield")
 Object = require "libs/classic/classic"
+
 require 'Hole'
---require 'Ball'
 require 'Player'
 require 'Energies'
 require 'Badies'
 require 'Walls'
 require 'Particles'
+require 'Powerups'
 
 love.window.setTitle("Marbles")
 
@@ -29,6 +30,13 @@ pal = {
 --local font = love.graphics.newImageFont("art/font.png", " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 local font = love.graphics.newFont(28)
 local fontS = love.graphics.newFont(20) 
+
+local ptypes = {'agility','aoe', 'bounce','size', 'speed','magnet','nochain','repulse'}
+
+function math.round(n, deci)
+  deci = 10^(deci or 0)
+  return math.floor(n*deci+.5)/deci
+end
 
 function love.load()
   pause = true
@@ -74,7 +82,7 @@ function love.load()
   --food = {}
   level = 1
   rangeOffset = -10
-  levelThresh = 100
+  levelThresh = 120
   maxScore = 0
   bonusHealth = 0
   grow = 0
@@ -165,8 +173,16 @@ function love.gamepadpressed(joystick, button)
   if button == 'start' then
       --print("pause")
       pause = not pause
+  elseif button == 'a' then
+    level = level + 1
   elseif button =='x' then
     curHealth= 5
+  elseif button == 'b' then
+    timer = 0
+  elseif button =='y' then
+    spawnPowerup()
+  
+  
     --player.pulse()
   --  for i=#badies,1,-1 do
   --    local bady = badies[i]
@@ -180,6 +196,22 @@ function love.keypressed(key, scancode, isrepeat)
   if key == "space" then
     pause = not pause
   end
+end
+
+function spawnPowerup()
+  local dir = math.random()*2*math.pi
+  local dist = player.getRange() + 12
+  local x = hole.getX() + math.cos(dir) * dist
+  local y = hole.getY() + math.sin(dir) * dist
+  local t1 = math.random(1,#ptypes)
+  local t2 = math.random(1,#ptypes-1)
+  if t2 >= t1 then
+    t2 = t2 + 1
+  end
+  table.insert(powerups, powerups.new(x,y,ptypes[t1]))
+  x = hole.getX() + math.cos(math.pi+dir) * dist
+  y = hole.getY() + math.sin(math.pi+dir) * dist
+  table.insert(powerups, powerups.new(x,y,ptypes[t2]))
 end
 
 function growUpdate(dt)
@@ -201,13 +233,14 @@ function growUpdate(dt)
         growtimerM = 1/30
         grow = 2
       end
-      if chain >= 224 then
-        growtimerM = 1/12
+      if chain >= 228 then
+        growtimerM = 1/10
         grow = -1
       end
       if grow < 0  and chain <= startHealth + bonusHealth then
         curHealth = startHealth + bonusHealth - chain 
         bonusHealth = 0
+        spawnPowerup()
         --if #badies > 0 then
         --  badies[1].kill()
         --end
@@ -233,6 +266,15 @@ function victory()
   pause = true
 end
 
+
+function explode(x, y, col)
+  for i=1,12 do
+    table.insert(particles, particles.new(
+      x,y, 1,
+      col,math.random(6,8)/10,-math.random(6,8)/10,math.random()*2*math.pi,math.random(14,22)))
+  end
+end
+
 function love.update(dt)
   score = (level - 1) * levelThresh + player.getRange() + rangeOffset
   if score > maxScore then
@@ -253,6 +295,7 @@ function love.update(dt)
   if pause then
     return
   end
+
   world:update(dt)
   hole.update(dt)
 
@@ -261,23 +304,27 @@ function love.update(dt)
   timer = timer - dt
   if waves < 0 then 
     waves = wavesM + level
-    spawnMult = math.random(18-level,24-level/2)/10
+    spawnMult = math.random(11-level^0.5,20-level^0.82)/10
   end
   if timer < 0 then
     waves = waves - 1
     timer = (timerM + math.random(-10, 10) / 10) * spawnMult
-    local side = love.math.random(0,3)
+    local sides = 3
+    if player.getRange() > 85 then
+      sides = 1
+    end
+    local side = love.math.random(0,sides)
     
     --table.insert(badies, badies.new(love.math.random(9, gameWidth-9), 9))
     --print(table.getn(badies))
     if side == 0 then
-      table.insert(badies, badies.new(love.math.random(9, gameWidth-9), 9))
+      table.insert(badies, badies.new(gameWidth-9, love.math.random(9, gameHeight-9))) --right
     elseif side == 1 then
-      table.insert(badies, badies.new(gameWidth-9, love.math.random(9, gameHeight-9)))
+      table.insert(badies, badies.new(9, love.math.random(9, gameHeight-9))) --left
     elseif side == 2 then
-      table.insert(badies, badies.new(love.math.random(9, gameWidth-9), gameHeight-9))
+      table.insert(badies, badies.new(love.math.random(9, gameWidth-9), gameHeight-9)) --bottom
     elseif side == 3 then
-      table.insert(badies, badies.new(9, love.math.random(9, gameHeight-9)))
+      table.insert(badies, badies.new(love.math.random(9, gameWidth-9), 9)) --top
     end
   end
 
@@ -315,11 +362,8 @@ function love.update(dt)
     local bady = badies[i]
     
     if bady.isDead() == true then
-      for i=1,12 do
-        table.insert(particles, particles.new(
-          bady.getX(),bady.getY(), 1,
-          'orange',math.random(6,8)/10,-math.random(6,8)/10,math.random()*2*math.pi,math.random(14,22)))
-      end
+      
+      explode(bady.getX(), bady.getY(), 'orange')
       --print("dead")
       table.remove(badies, i)
       local bx = bady.getX()
@@ -337,6 +381,11 @@ function love.update(dt)
     
     if energy.isDead() == true then
       --print("collected")
+      for i=1,5 do
+        table.insert(particles, particles.new(
+          energy.getX(),energy.getY(),1,
+          'white',.35,1.1,math.random()*2*math.pi,math.random(5,9)))
+      end
       table.remove(energies, i)
       energy.destroy()
       --table.insert(energies, energies.new())
@@ -344,6 +393,31 @@ function love.update(dt)
       energy.update(dt)
     end
   end
+
+  --local isCol = {}
+  --local notCol = {}
+  for i, p in ipairs(powerups) do
+    if p.isCollected() == true then
+      print("Collected" .. p.getType())
+      --table.insert(isCol, p.getType())
+    --else 
+    --  table.insert(notCol, p.getType())
+    end
+  end
+  for p=#powerups,1,-1 do
+    local powerup = powerups[p]
+    if powerup.isDead() == true then
+      table.remove(powerups, p)
+      powerup.destroy()
+    end
+  end
+  --for i, c in ipairs(isCol) do
+  --  print('+' .. c)
+  --end
+  --for i, c in ipairs(notCol) do
+  --  print('-' .. c)
+  --end
+  
   --if spawnTimer > 1 then
     --for i=#food,1,-1 do
       --ceiling.fixture:setUserData(nil)
@@ -403,7 +477,7 @@ local function rangeStencil()
 end
 
 function love.draw()
-  love.graphics.setFont(font)
+  love.graphics.setFont(fontS)
   --push:start()
   --love.graphics.setBackgroundColor(1,1,1)
   --love.graphics.setColor(0.4, 0.3, 0.02)
@@ -417,6 +491,9 @@ function love.draw()
   push:start()
   
   world:draw()
+  for i, p in ipairs(powerups) do
+    p.draw()
+  end
   --love.graphics.draw(bgback, bgbackquad, 0, 0)
 
   love.graphics.setStencilTest("greater", 0)
@@ -462,24 +539,24 @@ function love.draw()
   player.draw()
 
   push:finish()
-  love.graphics.setColor(unpack(pal.white)) 
-  local scoreD = player.getRange() + rangeOffset
-  if grow ~= 0 then
-    scoreD = scoreD .. ' + ' .. bonusHealth
-  end
-  love.graphics.printf(scoreD, 0, screenHeight / 20, screenWidth, 'center')
-  local lvls = ''
-  for i=1,level do
-    lvls = lvls .. '•'
-  end
-  love.graphics.printf(lvls, 0, screenHeight/20 + 24, screenWidth,'center')
+  --love.graphics.setColor(unpack(pal.white)) 
+  --local scoreD = player.getRange() + rangeOffset
+  --if grow ~= 0 then
+  --  scoreD = scoreD .. ' + ' .. bonusHealth
+  --end
+  --love.graphics.printf(scoreD, 0, screenHeight / 20, screenWidth, 'center')
+  --local lvls = ''
+  --for i=1,level do
+  --  lvls = lvls .. '•'
+  --end
+  --love.graphics.printf(lvls, 0, screenHeight/20 + 24, screenWidth,'center')
 
-  love.graphics.setFont(fontS)
-  local debugT = 'Waves: '.. waves .. 
-    '\r\nMult: ' .. spawnMult
-  love.graphics.print(debugT, 10, 50)
+  --love.graphics.setFont(fontS)
+  --local debugT = 'Waves: '.. waves .. 
+  --  '\r\nMult: ' .. spawnMult
+  --love.graphics.print(debugT, 10, 50)
   
-  love.graphics.print(love.timer.getFPS(),10,0)
+  --love.graphics.print(love.timer.getFPS(),10,0)
 
 
   --love.graphics.printf(#badies, 0, screenHeight / 20, screenWidth, 'left')
