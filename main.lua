@@ -1,7 +1,8 @@
 -- virtual resolution library
 push = require "libs/push/push"
-bf = require("libs/breezefield")
+bf = require "libs/breezefield"
 Object = require "libs/classic/classic"
+
 
 require 'Hole'
 require 'Player'
@@ -49,7 +50,8 @@ function love.load()
   push:setupScreen(gameWidth, gameHeight, screenWidth, screenHeight, {
     fullscreen = false,
     resizable = true,
-    pixelperfect = true
+    pixelperfect = true,
+    stretched = false
   })
   --push:setBorderColor{0.12, 0.11, 0.14} --default value
   push:setBorderColor{pal.black}
@@ -198,6 +200,23 @@ function love.keypressed(key, scancode, isrepeat)
   end
 end
 
+function testCol(x,y,r,type,dt)
+  --print(x .. y)
+  local colls = world:queryCircleArea(x, y, r)
+  for _, collider in ipairs(colls) do
+    --print(collider.identity)
+    if collider.identity == type then
+      local angle = getAngle(collider.getX(), collider.getY(), x, y)
+      --print(angle)
+      local xbounce = math.cos(angle) * 8.3
+      local ybounce = math.sin(angle) * 8.3
+      collider:applyForce(xbounce, ybounce)
+      --table.insert(out, collider)
+    end
+  end
+  --return out
+end
+
 function spawnPowerup()
   local dir = math.random()*2*math.pi
   local dist = player.getRange() + 12
@@ -296,7 +315,11 @@ function love.update(dt)
     return
   end
 
+  
   world:update(dt)
+  if player.getPickup() > 0 then
+    testCol(player.getX(),player.getY(), player.getPickup(), "energy", dt)
+  end
   hole.update(dt)
 
   growUpdate(dt)
@@ -304,7 +327,7 @@ function love.update(dt)
   timer = timer - dt
   if waves < 0 then 
     waves = wavesM + level
-    spawnMult = math.random(11-level^0.5,20-level^0.82)/10
+    spawnMult = math.random(16-3*level^0.5,22-4*level^0.5)/10
   end
   if timer < 0 then
     waves = waves - 1

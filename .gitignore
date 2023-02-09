@@ -4,3 +4,6 @@ package.cmd
 packager.yml
 Ball.lua
 icon.png
+node_modules
+html
+\steam*

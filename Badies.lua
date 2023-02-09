@@ -8,7 +8,7 @@ function badies.new(x, y)
   local timerM = math.random(15, 40) / 10
   --local timerV = math.random(0, timerM * 5) / 10
   local timer = timerM
-  local pow = math.random(700,2100)
+  local pow = math.random(12,35)
   local damp = math.random(5,20)/100
   --local effects = {}
   --local etimerM = 1/15
@@ -88,8 +88,8 @@ function badies.new(x, y)
       --dx = hole:getX() - x
       --dy = hole:getY() - y
       local a = getAngle(physics.getX(), physics.getY(), hole.getX(), hole.getY())
-      local xbounce = math.cos(a) * pow * dt
-      local ybounce = math.sin(a) * pow * dt
+      local xbounce = math.cos(a) * pow
+      local ybounce = math.sin(a) * pow
       physics:applyForce(xbounce,ybounce)
     end
   end

@@ -13,7 +13,7 @@ function energies.new(x, y, r)
   local rewalkM = math.random(2,6)
   local rewalk = rewalkM
   local closest = nil
-  local speed = 25
+  local speed = 0.42
   local mode = {r=0, g=0, b = 0}
   local xdir,ydir = nil
   --local effects = {}
@@ -91,15 +91,15 @@ function energies.new(x, y, r)
     
     local da = distAngle(physics.getX(), physics.getY(), hole.getX(), hole.getY()) 
   --if moveCenter then
-    xdir = 0.5 * math.cos(da.angle) * speed * dt
-    ydir = 0.5 * math.sin(da.angle) * speed * dt
+    xdir = 0.5 * math.cos(da.angle) * speed
+    ydir = 0.5 * math.sin(da.angle) * speed
 
     rewalk = rewalk - dt
     if rewalk < 0 then
       rewalk = rewalkM
       dir = math.random() * math.pi * 2
-      xdir = xdir + .5 * math.cos(dir) * speed * dt
-      ydir = ydir +.5 * math.sin(dir) * speed * dt
+      xdir = xdir + .5 * math.cos(dir) * speed
+      ydir = ydir +.5 * math.sin(dir) * speed
     end
     --local xdir, ydir = nil
     
@@ -107,8 +107,8 @@ function energies.new(x, y, r)
       --physics:applyForce(xbounce,ybounce)
     --elseif closest ~= nil then
     if closest ~= nil then
-      xdir = xdir - math.cos(closest.angle) * speed * dt
-      ydir = ydir - math.sin(closest.angle) * speed * dt
+      xdir = xdir - math.cos(closest.angle) * speed
+      ydir = ydir - math.sin(closest.angle) * speed
     end
       --mode = {r=0, g=1, b = 0}
       --physics:applyForce(-xdir,-ydir)
@@ -127,9 +127,9 @@ function energies.new(x, y, r)
     if other.identity == 'player' then
       --print("collect")
       if grow == 0 then
-        curHealth = curHealth + 1
+        curHealth = curHealth + 3
       else 
-        bonusHealth = bonusHealth + 1
+        bonusHealth = bonusHealth + 3
       end
       dead = true
     --elseif other.identity == 'wall' then

@@ -5,8 +5,9 @@ function player.new(x, y, r, health)
   self.__index = self
   --local dead = false
   local chain = health
-  local speed = 1080
+  local speed = 18
   local damp = 1.5
+  local pickup = 0
   --local curdist = nil
   --local curangle = nil
   local da = nil
@@ -40,7 +41,10 @@ function player.new(x, y, r, health)
   function self.pulse()
     if not pulseO then
       pulseO = true
+    end
   end
+  function self.getPickup()
+    return pickup
   end
 
   function self.update(dt)
@@ -76,8 +80,8 @@ function player.new(x, y, r, health)
     if da.dist < chain then
       if #joysticks > 0 then
         joystick = joysticks[1]
-        local xaxis = joystick:getGamepadAxis("leftx") * speed * dt
-        local yaxis = joystick:getGamepadAxis("lefty") * speed * dt
+        local xaxis = joystick:getGamepadAxis("leftx") * speed
+        local yaxis = joystick:getGamepadAxis("lefty") * speed
         --print(xaxis, yaxis)
         physics:applyForce(xaxis, yaxis)
       else
@@ -103,17 +107,21 @@ function player.new(x, y, r, health)
           end
           local moveAngle = sum / #moveAngles
           --moveAngle = moveAngle % (2 * math.pi)
-          local xbounce = math.cos(moveAngle) * speed * dt
-          local ybounce = math.sin(moveAngle) * speed * dt
+          local xbounce = math.cos(moveAngle) * speed
+          local ybounce = math.sin(moveAngle) * speed
           physics:applyForce(xbounce,ybounce)
         end
       end
     else 
-      local xbounce = math.cos(da.angle) * speed* dt
-      local ybounce = math.sin(da.angle) * speed * dt
+      local xbounce = math.cos(da.angle) * speed
+      local ybounce = math.sin(da.angle) * speed
       physics:applyForce(xbounce,ybounce)
     end
+    
+    
   end
+
+  
 
   function physics:postSolve(other)
     --if other.identity == 'energy' then
