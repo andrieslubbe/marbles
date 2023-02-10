@@ -85,18 +85,18 @@ function player.new(x, y, r, health)
         --print(xaxis, yaxis)
         physics:applyForce(xaxis, yaxis)
       else
-        if love.keyboard.isDown("w") then
+        if love.keyboard.isDown("w") or love.keyboard.isDown("up") then
           table.insert(moveAngles, math.pi * 1.5)
-          if love.keyboard.isDown("s") then
+          if love.keyboard.isDown("s") or love.keyboard.isDown("right") then
             table.insert(moveAngles,math.pi*2)
           end
-        elseif love.keyboard.isDown("s") then
+        elseif love.keyboard.isDown("s") or love.keyboard.isDown("right") then
           table.insert(moveAngles,0)
         end
-        if love.keyboard.isDown("r") then
+        if love.keyboard.isDown("r") or love.keyboard.isDown("down") then
           table.insert(moveAngles,math.pi / 2)
         end
-        if love.keyboard.isDown("a") then
+        if love.keyboard.isDown("a")  or love.keyboard.isDown("left") then
           table.insert(moveAngles, math.pi)
         end
         
