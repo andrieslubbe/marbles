@@ -31,7 +31,7 @@ function hole.new(x, y)
     if hit then
       inv = true
       hit = false
-      curHealth = curHealth -1
+      curHealth = curHealth -3
     end
     cooldown = cooldown - dt
     if cooldown < 0 then

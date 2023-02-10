@@ -1,3 +1,9 @@
+Run using `output/marbles.exe`
+
+
+DEV NOTES
+
+
 https://github.com/simplifylabs/love-packager
 
 1. Install NodeJS

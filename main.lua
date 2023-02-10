@@ -200,7 +200,7 @@ function love.keypressed(key, scancode, isrepeat)
   end
 end
 
-function testCol(x,y,r,type,dt)
+function testCol(x,y,r,type)
   --print(x .. y)
   local colls = world:queryCircleArea(x, y, r)
   for _, collider in ipairs(colls) do
@@ -208,8 +208,8 @@ function testCol(x,y,r,type,dt)
     if collider.identity == type then
       local angle = getAngle(collider.getX(), collider.getY(), x, y)
       --print(angle)
-      local xbounce = math.cos(angle) * 8.3
-      local ybounce = math.sin(angle) * 8.3
+      local xbounce = math.cos(angle) * 15
+      local ybounce = math.sin(angle) * 15
       collider:applyForce(xbounce, ybounce)
       --table.insert(out, collider)
     end
@@ -318,7 +318,7 @@ function love.update(dt)
   
   world:update(dt)
   if player.getPickup() > 0 then
-    testCol(player.getX(),player.getY(), player.getPickup(), "energy", dt)
+    testCol(player.getX(),player.getY(), player.getPickup(), "energy")
   end
   hole.update(dt)
 
